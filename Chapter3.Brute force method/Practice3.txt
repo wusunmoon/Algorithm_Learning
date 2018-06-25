@@ -1,0 +1,422 @@
+习题三
+1.模式匹配过程
+BF算法串匹配过程：
+ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab
+||					->						->	  ||||				->						->						->
+abcac					 abcac					  abcac					   abcac					abcac
+
+ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab
+	 |||			->						->						->						->			 |||||
+	 abcac					  abcac					   abcac					abcac					 abcac
+KMP算法匹配过程：
+Next表：
+   i	 0	1	2	3	4
+next[i]	-1	0	0	1	0
+ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab		ababcabccabcacbab
+||					->	  ||||				->	  					->						->			 |||||	
+abcac					  abcac					  	   abcac					abcac					 abcac
+2.分式化简
+分析：可以先求分子分母的最大公约数c，再将分子分母同时除以c
+c++实现：
+	#include<iostream>
+	using namespace std;
+	int Gcd(int m, int n)
+	{
+		int r = m%n;
+		while(r != 0){
+			m = n;
+			n = r;
+			r = m%n;
+		}
+		return n;
+	}
+	int main()
+	{
+		int fz,fm;
+		cout << "分子："; 
+		cin >> fz;
+		cout << "分母：";
+		cin >> fm;
+		int c = Gcd(fz,fm);
+		cout << "化简结果：" << fz/c << "/" << fm/c << endl;
+		return 0;
+	}
+3.大整数整除11
+分析：可用字符串表示大整数
+c++实现：
+	#include<iostream>
+	#include<string>
+	using namespace std;
+	int main()
+	{
+		string s;
+		cout << "输入大整数："; 
+		cin >> s;
+		if(s.size()%2)
+			s = "0" + s;
+		string subs;
+		int sum = 0;
+		for(int i = s.size()-2; i >=0; i=i-2){
+			subs = s.substr(i,2);
+			sum = sum + (subs[0]-'0')*10 + (subs[1]-'0');
+		}
+		if(sum%11 == 0){
+			cout << "该大整数能被11整除!" << endl;
+		}
+		else{
+			cout << "该大整数不能被11整除!" << endl;		
+		}
+		return 0;
+	}
+4.数字游戏
+分析：可以用全排列进行蛮力枚举测试
+c++实现：
+	#include<iostream>
+	#include<vector>
+	#include<algorithm>
+	using namespace std;
+	int main()
+	{
+		int count = 0;
+		vector<int> v{1,2,3,4,5,6,7,8,9};
+		do{
+			if(v[2] != 1 && v[6] != 1 && (v[3]*100+v[4]*10+v[5])%v[6] == 0 &&
+				(v[0]*10+v[1])*v[2]+(v[3]*100+v[4]*10+v[5])/v[6]-(v[7]*10+v[8]) == 0){
+					++count;
+					cout << v[0] << v[1] << "*" << v[2] << "+" << v[3] << v[4] << v[5] 
+						<< "/" << v[6] << "-" << v[7] << v[8] << "=0" << endl;
+			}
+		}while(next_permutation(v.begin(),v.end()));
+		cout << "共有" << count << "种填法！" << endl; 
+		return 0;
+	}
+5.a^n % m
+c++实现：
+	#include<iostream>
+	using namespace std;
+	int Seqanmodm(int a, int n, int m)
+	{
+		int r;
+		int t = a;
+		for(int i = 0; i < n; ++i){
+			r = t%m;
+			t = r * a;
+		}
+		return r;
+	}
+	int main()
+	{
+		int a,n,m;
+		cout << "a:";
+		cin >> a;
+		cout << "n:";
+		cin >> n;
+		cout << "m:";
+		cin >> m;
+		cout << "a^n mod m = " << Seqanmodm(a,n,m) << endl;
+		return 0;
+		
+	}
+6.数组删除元素x
+c++实现：
+	#include<iostream>
+	#include<vector>
+	using namespace std;
+	void DelX(vector<int> &v, int x)
+	{
+		int i = 0; 
+		while(i < v.size()){
+			if(v[i] == x){
+				swap(v[i],v[v.size()-1]);
+				v.pop_back();
+			}
+			else
+				++i;
+		}
+	}
+	int main()
+	{
+		vector<int> v{1,3,3,5,8,1,5,3};
+		for(auto i : v){
+			cout << i << " ";
+		}
+		cout << endl;
+		cout << "删除3：";
+		DelX(v,3);
+		for(auto i : v){
+			cout << i << " ";
+		}	
+		return 0;
+	}
+7.删除数组重复元素，移动次数较少，剩余元素相对次序不变
+分析：定义一个没有重复元素区：0~len，遍历每个元素，若与0~len中元素不重复，
+		给0~len扩展一个元素位置，把该元素覆盖到这个位置，遍历结束后删除后面
+		不再0~len区的元素。
+c++实现：
+	#include<iostream>
+	#include<vector>
+	using namespace std;
+	void Distinct(vector<int> &v)
+	{
+		int len = 1;
+		for(int i = 1; i < v.size(); ++i){
+			int j;
+			for(j = 0; j < len; ++j){
+				if(v[i] == v[j])
+					break;
+			}
+			if(j == len)
+				v[len++] = v[i];
+		}
+		while(v.size() > len)
+			v.pop_back();
+	}
+	int main()
+	{
+		vector<int> v{2,3,4,8,1,3,6,4,9,6,3};
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+		Distinct(v);
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;	
+		return 0;
+	}
+8.将表A拆分成B，C
+分析：用链表存储，由于B，C不另外设置存储内存，因此不设头结点，拆分后释放A的头结点
+c++实现：
+	#include<iostream>
+	#include<random>
+	#include<ctime>
+	using namespace std;
+	const int Size = 10;
+	struct Node{
+		int data;
+		Node * next;
+	};
+	//初始化链表A 
+	void InitLinkList(Node * &A)
+	{
+		uniform_int_distribution<int> u(-99,99);
+		default_random_engine e(time(0));
+		A = new Node{0,NULL};
+		for(int i = 0; i < Size; ++i){
+			Node * p = new Node{u(e),A->next};
+			A->next = p;
+		}
+	}
+	//拆分表A 
+	void Split(Node * &A, Node * &B, Node * &C)
+	{
+		B = NULL;
+		C = NULL;
+		Node * p = A->next;
+		while(p != NULL){
+			Node * t = p->next;
+			if(p->data >= 0){
+				p->next = B;
+				B = p;
+				p = t;
+			}
+			else{
+				p->next = C;
+				C = p;
+				p = t;			
+			}
+		}
+		delete A;//释放A的头结点 
+	}
+	void Output(Node * p)
+	{
+		while(p != NULL){
+			cout << p->data << " ";
+			p = p->next;
+		}
+		cout << endl;
+	} 
+	void Release(Node * p)
+	{
+		while(p != NULL){
+			Node * t = p;
+			p = p->next;
+			delete t;
+		}
+	}
+	int main()
+	{
+		Node * A;
+		InitLinkList(A);
+		Node * p = A;
+		cout << "A:";
+		while(p->next != NULL){
+			cout << p->next->data << " ";
+			p = p->next;
+		}
+		cout << endl;
+		
+		Node * B, * C;
+		Split(A,B,C);
+		p = B;
+		cout << "B:";
+		Output(B);
+		p = C;
+		cout << "C:";
+		Output(C);
+		cout << endl;
+		Release(B);
+		Release(C);
+		return 0;
+	}
+9.荷兰国旗问题
+分析：一种比较取巧的做法是统计R,W,B各自出现的次数，再重置数组。下面实现是基于遍历交换的方法。
+c++实现：
+	#include<iostream>
+	#include<algorithm>
+	using namespace std;
+	void Dutchflag(vector<char> &vc)
+	{
+		int begin = 0;
+		int cur = begin;
+		int end = vc.size() - 1;
+		while(cur < end){
+			if(vc[cur] == 'R'){
+				swap(vc[begin],vc[cur]);
+				++begin;
+				++cur;
+			}
+			else if(vc[cur] == 'W'){
+				++cur;
+			}
+			else if(vc[cur] == 'B'){
+				swap(vc[cur],vc[end]);
+				--end;
+			}
+			else{
+				cout << "Error!!!" << endl;
+			}
+		}
+	}
+	int main()
+	{
+		vector<char> vc{'R','B','W','R','R','W','W','B','B','W'};
+		for(auto c : vc)
+			cout << c << " ";
+		cout << endl;
+		Dutchflag(vc);
+		for(auto c : vc)
+			cout << c << " ";
+		cout << endl;	
+		return 0;
+	}
+10.最近对问题的k维空间蛮力算法
+分析：几乎与二维情况相同，时间复杂度为O(kn^2)
+c++实现：
+	#include<iostream>
+	#include<vector>
+	#include<limits>
+	using namespace std;
+	int ClosestPoints(vector<vector<int>> &v)
+	{
+		int index1,index2;
+		int minDist = numeric_limits<int>::max();
+		int d;
+		for(int i = 0; i < v.size()-1; ++i){
+			for(int j = i+1; j < v.size(); ++j){
+				d = 0;
+				for(int k = 0; k < v[i].size()-1; ++k)
+					d += (v[i][k]-v[j][k]) * (v[i][k]-v[j][k]);
+				cout << d << endl;
+				if(d < minDist){
+					minDist = d;
+					index1 = i;
+					index2 = j;
+				}	
+			}
+		}
+		cout << "最近点对是：" << index1 << "和" << index2 << endl;
+		return minDist; 
+	}
+	int main()
+	{
+		vector<int> v1{1,2,4};
+		vector<int> v2{3,7,1};
+		vector<int> v3{2,0,6};
+		vector<int> v4{8,2,3};
+		vector<int> v5{0,0,5};
+		vector<vector<int>> v{v1,v2,v3,v4,v5};
+		ClosestPoints(v);
+		return 0;
+	}
+11.蛮力法解小规模线性规划问题
+分析：此题有点疑问在于没有限制x，y只能取整数，若是实数范围，则即使蛮力法也不可能穷举尽。
+c++实现：
+	#include<iostream>
+	using namespace std;
+	int main()
+	{
+		int max = 0;
+		int v;
+		int x0,y0;
+		for(int x = 0; x <= 4; ++x){
+			for(int y = 0; (x+y)<=4 && (x+3*y)<=6; ++y){
+				v = 3*x+5*y; 
+				if(v > max){
+					max = v;
+					x0 = x;
+					y0 = y;
+				}
+			}
+		}
+		cout << "x = " << x0 << " , y = " << y0 << "时，3x+5y取得极大值：" << max << endl; 
+		return 0;
+	}
+12.邻接矩阵表示的连通图是否具有欧拉回路
+见https://github.com/Goahead15109/DataStructure_Learning/blob/master/Graph/AdjMatrix/NoNetGraph/MGraph.hpp
+13.找词游戏
+见https://github.com/Goahead15109/DataStructure_Learning/blob/master/String-Array/FindWords.cpp
+14.同位词
+分析：对给定的两个单词的字母进行排序，在逐位比较。
+c++实现：
+#include<iostream>
+#include<algorithm>
+#include<string>
+using namespace std;
+bool IsAnagram(string s1, string s2)
+{
+	if(s1.size() != s2.size())
+		return false;
+	sort(s1.begin(),s1.end());
+	sort(s2.begin(),s2.end());
+	for(int i = 0; i < s1.size(); ++i){
+		if(s1[i] != s2[i])
+			return false;
+	}	
+	return true;
+}
+int main()
+{
+	string s1 = "eat";
+	string s2 = "tea";
+	cout << s1 << " 与 " << s2 << (IsAnagram(s1,s2)?"是":"不是") << "同位词。" << endl; 
+	return 0;
+}
+15.美国有一个连锁店叫7-11
+分析：第一次写的时候用了浮点类型，没得到答案，才发现浮点数不可以相等比较，扩大100倍用整型运算即可
+c++实现：
+	#include<iostream>
+	using namespace std;
+	int main()
+	{
+		for(int a = 0; a <= 711; ++a){
+			for(int b = 0; b <= 711 - a; ++b){
+				for(int c = 0; c <= 711 - a - b; ++c){
+					if(a*b*c*(711-a-b-c) == 711000000){
+						cout << a/100.0 << " " << b/100.0 << " " << c/100.0 << " " << (711-a-b-c)/100.0 << endl;
+						return 0;
+					}
+				}
+			}
+		}
+	}
+  
