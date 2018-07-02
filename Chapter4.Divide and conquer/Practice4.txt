@@ -1,0 +1,540 @@
+练习四
+1.分治法的时间性能T(n)
+T(n) = /c					n=1
+	   \a*T(n/b) + c*n^k	n>1
+其中a,b,c和k都是常数。大小为n的原问题分解为若干个大小为n/b的子问题，
+其中a个子问题需要求解，c*n^k是合并各个子问题的解需要的工作量。
+2.没看懂题目
+3.分治策略一定导致递归吗？
+个人看法：不是，
+4.递归运行轨迹
+（1）归并排序								（2）快速排序
+			5 3 1 9									5 3 1 9
+		5 3			1 9							   [1 3]5[9]
+	   5   3	   1   9							1[3]5 9
+		3 5			1 9								1 3 5 9
+			1 3 5 9
+5.分治法求最大元素
+1）伪代码：
+输入：数组a，下界lo，上界hi
+输出：数组a的最大元素
+1.如果lo 等于 hi，输出该元素；
+2.否则，求m = （lo + hi）/ 2
+	2.1 求前半数组lo~m的最大值max1；
+	2.2 求后半数组m~hi的最大值max2；
+	2.3 输出max1,max2两者较大值；
+2）c++实现：
+	#include<iostream>
+	using namespace std;
+	int Max(int a[], int lo, int hi)
+	{
+		if(lo == hi)
+			return a[lo];
+		else{
+			int m = (lo + hi) / 2;
+			int max1 = Max(a,lo,m);
+			int max2 = Max(a,m+1,hi);
+			return (max1>max2?max1:max2);
+		}
+	}
+	int main()
+	{
+		int a[] = {2,3,6,1,9,5};
+		cout << Max(a,0,5) << endl;
+		return 0;
+	}
+3）时间性能分析：
+T(n)/1			,n=1	; 另n=2^k;
+	\2*T(n/2)+1	,n>1
+T(n) = 2^(k+1)-1 = 2n-1 = O(n)
+6.分治法实现循环左移k位
+分析：一个经典算法：先将前k个元素倒置，再将后n-k个元素倒置，再将整体n个元素倒置
+c++实现：
+	#include <iostream>
+	using namespace std; 
+	template <class T>
+	void Reverse(T A[],int lo,int hi)
+	{
+		while(lo<hi){
+			int t = A[lo];
+			A[lo]=A[hi];
+			A[hi]=t;
+			++lo;
+			--hi;
+		}
+	} 
+	template <class T>
+	void LeftShift(T A[],int n,int i)
+	{
+		Reverse(A,0,i-1);
+		Reverse(A,i,n-1);
+		Reverse(A,0,n-1);
+	}
+	int main()
+	{
+		char A[] = {'a','b','c','d','e','f','g','h'};	
+		LeftShift(A,8,3);
+		for(int i=0;i<8;++i)
+			cout<<A[i]<<" ";
+		
+		cout<<endl;
+		return 0;
+	}
+7.递归生成全排列。
+分析：对n个元素进行全排列，可以分成n个子问题：将n个元素中的每一个元素与第一个元素交换，
+再求除第一个元素的序列的全排列。
+c++实现：
+	#include<iostream>
+	#include<vector>
+	#include<algorithm>
+	using namespace std;
+	template<class T>
+	void Permutation(T A[], int lo, int hi)
+	{
+		if(lo == hi){
+			for(int i = 0; i <= hi; ++i)
+				cout << A[i] << " ";
+			cout << endl;
+			return;
+		}
+		else{
+			for(int i = lo; i <= hi; ++i){
+				if(find(A+lo,A+i,A[i]) != A+i)
+					continue;
+				swap(A[lo],A[i]);
+				Permutation(A,lo+1,hi);
+				swap(A[lo],A[i]);
+			}		
+		}
+	}
+	int main()
+	{
+		int A[] = {1,2,2,2,5};
+		Permutation(A,0,4);	
+		return 0;
+	}
+8.一维空间最近对问题
+分析：一维空间最近对问题较例题中的二维空间简单，对排序好的数列找出左半部分的最近对的距离d1，
+再找出右半部分的最近对的距离d2，最后返回d1，d2和中间两点距离最小值即可。
+c++实现：
+	#include<iostream>
+	#include<algorithm>
+	using namespace std;
+	int Closest(int S[], int lo, int hi)
+	{
+		if(hi - lo == 1)
+			return abs(S[hi]-S[lo]);
+		if(hi - lo == 2)
+			return min({abs(S[lo]-S[lo+1]),abs(S[lo]-S[hi]),abs(S[lo+1]-S[hi])});
+		int m = (hi - lo) / 2;
+		int d1 = Closest(S,lo,m);
+		int d2 = Closest(S,m+1,hi);
+		return min({d1,d2,abs(S[m]-S[m+1])});
+	}
+	int main()
+	{
+		int S[] = {-2, 3, 5, -1, 15, 9};
+		sort(S,S+6);
+		cout << Closest(S,0,5) << endl;
+		return 0;
+	}
+9.在序列r中找到r[i] = i的元素，要求时间复杂度最坏O(lgn)
+分析：若序列r中没有重复元素，则可用二分查找，时间复杂度为O(lgn)；
+		若r中存在重复元素，二分查找不可用，时间性能不可能达到O(lgn);
+10.分治法求数组中的众数。
+分析：首先利用快排的partition进行划分，在分区的同时统计与pivot相等的元素的个数n（重数），
+如果n都大等于pivot左右 两边元素的个数，那它就是众数，否则选取比n大或等的分区采用同样的方法进行递归，
+并与原来的pivot和它的重数进行比较，选取大的，当递归结束后，众数以及它的重数就出来了。
+c++实现：
+	#include<iostream>
+	#include<vector>
+
+	using namespace std;
+
+	/*
+		函数：一次划分
+		参数：A：数组  lo：下限  hi：上限  n的引用：轴值出现的次数
+		返回值：轴值的位置 
+	*/
+	int Partition(vector<int> &A, int lo, int hi, int &n)
+	{
+		n = 0;
+		int pivot = A[lo];
+		while(lo < hi){
+			while(lo < hi && A[hi] >= pivot){
+				if(A[hi] == pivot)
+					++n;
+				--hi;	
+			}
+			A[lo] = A[hi];
+			while(lo < hi && A[lo] <= pivot){
+				if(A[lo] == pivot)
+					++n;
+				++lo;
+			}
+			A[hi] = A[lo];
+		}
+		A[lo] = pivot;
+		++n;
+		return lo;
+	}
+	/*
+		函数：求数组的众数
+		参数： A：数组  lo：下限  hi：上限  v:数组众数集合  n的引用：众数出现的次数
+	*/ 
+	void GetMode(vector<int> &A, int lo, int hi, vector<int> &v, int &n)
+	{
+		//一次划分，并求轴值出现的次数 
+		int num = 0;
+		int m = Partition(A,lo,hi,num);
+		//对左半部分求数组众数 
+		vector<int> vl;
+		int numl = 0;
+		if(num <= m - lo)
+			GetMode(A,lo,m-1,vl,numl);
+		//对右半部分求数组众数 
+		vector<int> vr;
+		int numr = 0;
+		if(num <= hi - m)
+			GetMode(A,m+1,hi,vr,numr);
+		//整合	
+		if(num >= numl && num >= numr){
+			n = num;
+			if(num == numl)
+				v.insert(v.end(),vl.begin(),vl.end());
+			if(num == numr)
+				v.insert(v.end(),vr.begin(),vr.end());
+			v.push_back(A[m]);
+		}
+		else if(numl >= num && numl >= numr){
+			n = numl;
+			if(numl == num)
+				v.push_back(A[m]);
+			if(numl == numr)
+				v.insert(v.end(),vr.begin(),vr.end());
+			v.insert(v.end(),vl.begin(),vl.end());
+		}
+		else if(numr >= num && numr >= numl){
+			n = numr;
+			if(numr == numl)
+				v.insert(v.end(),vl.begin(),vl.end());
+			if(numr == num)
+				v.push_back(A[m]);
+			v.insert(v.end(),vr.begin(),vr.end());
+		}
+	}
+	int main()
+	{
+		vector<int> A = {1, 4, 2, 9, 8, 11, 16, 6, 7, 7};
+		cout << "数组：";
+		for(auto i : A)
+			cout << i << " ";
+		cout << endl; 
+		vector<int> v;
+		int n;
+		GetMode(A,0,A.size()-1,v,n);
+		if(v.size() == A.size())//若所有值皆为众数，则无众数 
+			cout << "不存在众数！！！" << endl;
+		else{
+			cout << "众数：";
+			for(auto i : v)
+				cout << i<< " ";
+			cout << endl;
+			cout << "重复次数："; 
+			cout << n << endl;
+		}
+		return 0;
+	}
+11.分治法查找x是否在矩阵M中，M的行列元素按升序排列。
+分析：类似与折半查找，把M划分为4个区分别查找
+c++实现：
+	#include<iostream>
+	using namespace std;
+	const int Size = 4; 
+	bool FindX(int A[][Size], int n, int sr, int sc, int x)
+	{
+		if(n == 1){
+			if(x == A[sr][sc])
+				return true;
+			else
+				return false;		
+		}
+		/*
+		A | B
+		-----
+		C | D
+		*/
+		bool r1,r2,r3,r4;
+		r1 = r2 = r3 = r4 = false;
+		//A区 
+		if(x >= A[sr][sc] && x <= A[sr+(n-1)/2][sc+(n-1)/2])
+			r1 = FindX(A,(n-1)/2+1,sr,sc,x);
+		//B区 
+		if(n%2==0 && x >= A[sr][sc+(n+1)/2] && x <= A[sr+(n-1)/2][sc+n-1])
+			r2 = FindX(A,(n-1)/2+1,sr,sc+(n+1)/2,x);
+		if(n%2 && x >= A[sr][sc+(n-1)/2] && x <= A[sr+(n-1)/2][sc+n-1])
+			r2 = FindX(A,(n-1)/2+1,sr,sc+(n-1)/2,x);
+		//C区 
+		if(n%2==0 && x >= A[sr+(n+1)/2][sc] && x <= A[sr+n-1][sc+(n-1)/2])
+			r3 = FindX(A,(n-1)/2+1,sr+(n+1)/2,sc,x);
+		if(n%2 && x >= A[sr+(n-1)/2][sc] && x <= A[sr+n-1][sc+(n-1)/2])
+			r3 = FindX(A,(n-1)/2+1,sr+(n-1)/2,sc,x);
+		//D区 
+		if(n%2==0 && x >= A[sr+(n+1)/2][sc+(n+1)/2] && x <= A[sr+n-1][sc+n-1])
+			r4 = FindX(A,(n-1)/2+1,sr+(n+1)/2,sc+(n+1)/2,x);
+		if(n%2 && x >= A[sr+(n-1)/2][sc+(n-1)/2] && x <= A[sr+n-1][sc+n-1])
+			r4 = FindX(A,(n-1)/2+1,sr+(n-1)/2,sc+(n-1)/2,x);
+		
+		return (r1||r2||r3||r4);
+	}
+	int main()
+	{
+		int A[Size][Size] = {1,2,3,4,
+							2,3,4,9,
+							5,6,8,11,
+							6,8,10,12};
+		
+		bool r = FindX(A,Size,0,0,11);
+		cout << r << endl;
+		
+		return 0;
+	}
+时间复杂度：最好情况O(n),最坏情况O(n^2).
+12.偶数大小的不等正整数集合划分为两个相同大小的子集，使两子集元素之和的差达到最大。
+分析：利用快速排序的划分思想，设正整数集合为数组S，划分为前半个数组S1，后半个数组为S2，
+若第一次划分的轴值是中位数，则返回；若不是继续划分中位数所在的部分。
+c++实现：
+	#include<iostream>
+	#include<vector>
+	using namespace std;
+	/*
+		函数：快速排序一次划分 
+	*/
+	int Partition(vector<int> &v, int lo, int hi)
+	{
+		int pivot = v[lo];
+		while(lo < hi)
+		{
+			while(lo < hi && v[hi] >= pivot)
+				--hi;
+			v[lo] = v[hi];
+			while(lo < hi && v[lo] <= pivot)
+				++lo;
+			v[hi] = v[lo];
+		}
+		v[lo] = pivot;
+		return lo;
+	}
+	/*
+		函数：偶数大小数组分割，使前半部分和与后半部分和之差最大
+		参数：v：偶数大小数组 lo：数组下限 hi：数组上限 
+	*/ 
+	void SetMedian(vector<int> &v, int lo, int hi)
+	{
+		int m = Partition(v,lo,hi);
+		if(m == v.size()/2 || m == v.size()/2-1)
+			return;
+		else{
+			if(m < v.size()/2-1)
+				SetMedian(v,m+1,hi);
+			else
+				SetMedian(v,lo,m-1);
+		}
+	}
+	int main()
+	{
+		vector<int> v{1,5,3,9,12,6,10,25,68,15};
+		cout << "子集S：";
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+		
+		SetMedian(v,0,v.size()-1);
+		
+		cout << "子集S1：";
+		for(int i = 0; i <= v.size()/2-1; ++i)
+			cout << v[i] << " ";
+		cout << endl;
+		cout << "子集S2：";
+		for(int i = v.size()/2; i < v.size(); ++i)
+			cout << v[i] << " ";
+		cout << endl;
+		
+		return 0;
+	}
+13.统计排列逆序个数。
+分析：合并数列(1，3，5)与(2，4)的时候：先取出前面数列中的1。
+取出后面数列中的2，此时2和前面的3，5都可以组成逆序数对即(3, 2)，(5, 2)
+取出前面数列中的3。
+取出后面数列中的4，同理，4和前面数列中的5可以组成一个逆序数对。
+这样就完成了逆序数对的统计，归并排序的时间复杂度是O(N * LogN)，因此这种从归并排序到数列的逆序数对的解法的时间复杂度同样是O(N * LogN)
+c++实现：
+	#include<iostream>
+	#include<vector>
+	using namespace std;
+	//lo：下限  hi：最后一个元素的后面一个位置
+	int MergeReorderCount(vector<int> &v, int lo, int hi)
+	{
+		if(hi - lo == 1)
+			return 0;
+		else{
+			int count = 0;
+			int m = (lo + hi) / 2;
+			count += MergeReorderCount(v,lo,m);
+			count += MergeReorderCount(v,m,hi);
+			
+			vector<int> vl(v.begin()+lo,v.begin()+m);
+			int i = lo;
+			int j = 0;
+			int k = m;
+			while(i < hi){
+				if(j < vl.size() && (k == hi || v[j] <= v[k]))
+					v[i++] = vl[j++];
+				if(k < hi && (j == vl.size() || v[j] > v[k])){
+					count += (vl.size() - j);
+					v[i++] = v[k++];
+				}
+			}
+			return count;
+		}
+	}
+	int main()
+	{
+		vector<int> v = {2,3,1};
+		cout << MergeReorderCount(v,0,v.size()) << endl;
+		return 0;
+	}
+14.循环赛日程安排问题。
+分析：按分治策略,我们可以将所有的选手分为两半,则n个选手的比赛日程表可以通过n/2个选手的比赛日程表来决定。
+递归地用这种一分为二的策略对选手进行划分,直到只剩下两个选手时,就让这两个选手进行比赛就可以了。
+日程表可用矩阵来标识，元素值为运动员编号，列坐标表示第几天，下标从0开始，并约定第0天，表示自己跟自己比赛，
+例如，对于只有两个动员员的情况
+1  2
+2  1
+表示，1的第1天跟2比赛，2的第一天跟1比赛。
+下面来看看四个运动员的情况，如下：
+1 2 3 4
+2 1 4 3
+3 4 1 2
+4 3 2 1
+可把它划分为4个2*2的矩阵，即划分为四组两个动动员时的情况。
+据此我们可以看到，将左上角小块中的所有数字按其相对位置抄到右下角,又将左下角小块中的所有数字按其相对位置
+抄到右上角,这样我们就分别安排好了。
+c++实现：
+	#include<iostream>
+	#include<vector>
+	#include<algorithm>
+	using namespace std;
+	void Init(vector<vector<int>> &v, int n)
+	{
+		for (int i = 0; i < n; ++i) {
+			vector<int> v1(n, 0);
+			v.push_back(v1);
+		}
+		for (int i = 0; i < v.size(); ++i)
+			v[i][0] = i + 1;
+
+	}
+	void Schedule(vector<vector<int>> &v, int lo, int hi)
+	{
+		if(hi - lo == 2){
+			v[lo][1] = v[hi-1][0];
+			v[hi-1][1] = v[lo][0];
+			return;
+		}
+		else{
+			int m = (lo + hi) / 2;
+			Schedule(v,lo,m);
+			Schedule(v,m,hi);
+			for(int i = lo,j = m; i < m; ++i,++j){
+				copy(v[i].begin(),v[i].begin()+m-lo,v[j].begin()+m-lo);
+				copy(v[j].begin(),v[j].begin()+hi-m,v[i].begin()+hi-m);
+			}
+		}
+	}
+	int main()
+	{
+		vector<vector<int>> v;
+		int n;
+		cout << "请输入选手人数：";
+		cin >> n;
+		Init(v, n);
+		Schedule(v,0,v.size());
+		for(auto v1 : v){
+			for(auto i : v1)
+				cout << i << " ";
+			cout << endl;
+		}
+		return 0;
+	}
+15.构造格雷码
+分析：本算法纯粹基于观察得出，虽算法有分治的影子，却没发现有分治的含义。
+假设n=3，则十进制序列：
+0，1，2，3，4，5，6，7 -> 0,1,2,3, | 6,7,4,5 -> 0,1, | 3,2, | 6,7, | 5,4
+由此得到一个格雷码的十进制序列，再转换为二进制字符串即可。
+c++实现:
+	#include<iostream>
+	#include<vector>
+	#include<algorithm>
+	#include<string>
+	#include<cmath>
+	using namespace std;
+	void Init(vector<int> &v, vector<string> &gc, int n)
+	{
+		int m = pow(2,n);
+		for(int i = 0; i < m; ++i){
+			v.push_back(i);
+			
+			string s(n,'0');
+			gc.push_back(s);
+		}
+	}
+	void GrayCode(vector<int> &v, int lo, int hi)
+	{
+		if(hi - lo == 2)
+			return;
+		else{
+			int m = (lo + hi) / 2;
+			vector<int> t(v.begin()+m,v.begin()+(m+hi)/2);
+			copy(v.begin()+(m+hi)/2,v.begin()+hi,v.begin()+m);
+			copy(t.begin(),t.end(),v.begin()+(m+hi)/2);
+			GrayCode(v,lo,m);
+			GrayCode(v,m,hi);
+		}
+	}
+	void Conver(vector<int> &v, vector<string> &gc)
+	{
+		int n = v.size();
+		for(int i = 0; i < n; ++i)
+		{
+			int t = v[i];
+			int j = gc[0].size()-1;
+			while(t){
+				gc[i][j] = t%2 + '0';
+				t /= 2;
+				--j;
+			}
+		}
+	}
+	int main()
+	{
+		int n;
+		cout << "n = ";
+		cin >> n;
+		
+		vector<int> v;
+		vector<string> gc;
+		Init(v,gc,n);
+		
+		GrayCode(v,0,v.size());
+		Conver(v,gc);
+		
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+		for(auto s : gc)
+			cout << s << endl;
+		return 0;
+	}
+16.矩阵乘法
+分析：Strassen算法
