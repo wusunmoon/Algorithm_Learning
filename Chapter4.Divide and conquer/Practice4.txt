@@ -388,9 +388,9 @@ c++实现：
 			int j = 0;
 			int k = m;
 			while(i < hi){
-				if(j < vl.size() && (k == hi || v[j] <= v[k]))
+				if(j < vl.size() && (k == hi || vl[j] <= v[k]))
 					v[i++] = vl[j++];
-				if(k < hi && (j == vl.size() || v[j] > v[k])){
+				if(k < hi && (j == vl.size() || vl[j] > v[k])){
 					count += (vl.size() - j);
 					v[i++] = v[k++];
 				}
