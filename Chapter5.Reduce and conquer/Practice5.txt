@@ -1,0 +1,257 @@
+练习5
+1.该算法不正确。因为若原数组不存在要查找的值k，则会陷入死循环。查找到最后，low==high，mid==low==high。
+2.折半查找的递归算法
+c++实现：
+	#include<iostream>
+	#include<vector>
+	using namespace std;
+	int BinSearch(const vector<int> &v, int lo, int hi,int k)
+	{
+		if(lo == hi)
+			return -1;
+		else{
+			int m = (lo + hi) >> 1;
+			if(k == v[m])
+				return m;
+			else if(k < v[m])
+				return BinSearch(v,lo,m-1,k);
+			else
+				return BinSearch(v,m+1,hi,k);
+		}
+	}
+	int main()
+	{
+		vector<int> v{7,14,18,21,23,29,31,35,38};
+		cout << BinSearch(v,0,v.size(),18) << endl;
+		return 0;
+	}
+时间性能：
+	T(n)/1        , n=1		>>> T(n) = O(lgn)
+		\T(n/2)+1 , n>1		>>>
+3.折半算法查找范围
+分析：先通过折半查找出范围存在的较小区间，再分别进行折半查找左右边界。
+c++实现：
+	#include<iostream>
+	#include<vector>
+	using namespace std;
+	/*
+		函数：求数组下标的左边界 
+		参数：v：数组    lo：下界    hi：上界之后一个位置    a：所查找左边界值
+		返回： 数组下标的左边界
+	*/
+	int BinSearchRangeL(const vector<int> &v,int lo, int hi, int a)
+	{
+		if(lo == hi)
+			return lo;
+		int m = (lo + hi) >> 1;
+		if(v[m] == a)
+			return m;
+		else if(v[m] < a)
+			return BinSearchRangeL(v,m+1,hi,a);
+		else
+			return BinSearchRangeL(v,lo,m,a);
+	}
+	/*
+		函数：求数组下标的右边界 
+		参数：v：数组    lo：下界    hi：上界之后一个位置    b：所查找右边界值
+		返回： 数组下标的右边界
+	*/ 
+	int BinSearchRangeR(const vector<int> &v,int lo, int hi, int b)
+	{
+		if(lo == hi)
+			return lo-1;
+		int m = (lo + hi) >> 1;
+		if(v[m] == b)
+			return m;
+		else if(v[m] < b)
+			return BinSearchRangeR(v,m+1,hi,b);
+		else
+			return BinSearchRangeR(v,lo,m,b);
+	}
+	/*
+		函数：求数组在[a,b]区间的值
+		参数：v：数组 lo：下界 hi：上界之后一个位置 a：所查找左边界值 b：所查找右边界值 
+	*/ 
+	void BinSearchRange(const vector<int> &v,int lo, int hi, int a, int b)
+	{
+		if(lo == hi)
+			return;
+		if(hi - lo == 1){
+			if(v[lo] < a || v[lo] > b)
+				return;
+			if(v[lo] == a){
+				cout << v[lo] << endl;
+				return;
+			}
+		}
+		int m = (lo + hi) >> 1;
+		if(v[m] > b)
+			BinSearchRange(v,lo,m,a,b);
+		else if(v[m] <= a)
+			BinSearchRange(v,m,hi,a,b);
+		else{
+			int i = BinSearchRangeL(v,lo,m,a);
+			int j = BinSearchRangeR(v,m,hi,b);
+			for(int k = i; k <= j; ++k)
+				cout << v[k] << " ";
+		}
+	}
+	int main()
+	{
+		vector<int> v{7,14,18,21,23,29,31,35,38};
+		BinSearchRange(v,0,v.size(),17,37);
+		return 0;
+	}
+4.求两个整数的最小公倍数
+c++实现：
+	#include<iostream>
+	using namespace std;
+	int GCD(int m, int n)
+	{
+		if(m%n == 0)
+			return n;
+		else
+			return GCD(n,m%n);
+	}
+	int LCM(int m, int n)
+	{
+		return m * n / GCD(m,n);
+	}
+	int main()
+	{
+		cout << LCM(12,15) << endl;
+		return 0;
+	}		
+5.插入法调整堆
+分析：插入节点应从叶子节点开始调整
+c++实现：
+	#include<iostream>
+	#include<vector>
+	#include<algorithm>
+	using namespace std;
+	void InsertHeap(vector<int> &v)
+	{
+		int k = v.size() - 1;
+		int x = v[k];
+		while(k > 0 && v[(k-1)/2] < x){
+			v[k] = v[(k-1)/2];
+			k = (k - 1) / 2;
+		}
+		v[k] = x;
+	}
+	int main()
+	{
+		vector<int> v{50,40,45,36,32,18,22,30};
+		v.push_back(55);
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+		InsertHeap(v);
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+		
+		return 0;
+	} 
+6.大根堆删除元素
+分析：先把删除元素与最后元素交换，删除最后元素，调整堆
+c++实现：
+	#include<iostream>
+	#include<vector>
+	#include<algorithm>
+	using namespace std;
+	/*
+		函数：删除堆元素
+		参数：v：数组    i：删除元素下标 
+	*/
+	void HeapDelete(vector<int> &v, int i)
+	{
+		int n = v.size();
+		swap(v[i],v[--n]);
+		v.pop_back();
+		int j = 2*i+1;
+		while(j < n){
+			if(j < n - 1)
+				j = (v[j]<v[j+1]?j+1:j);
+			if(v[i] < v[j]){
+				swap(v[i],v[j]);
+				i = j;
+				j = 2*i+1;
+			}
+			else
+				break;
+		} 
+	}
+	int main()
+	{
+		vector<int> v{50,40,45,36,32,18,22,30};
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+		
+		HeapDelete(v,2);
+		for(auto i : v)
+			cout << i << " ";
+		cout << endl;
+
+		return 0;
+	}
+7.俄式乘法
+c++实现：
+	#include<iostream>
+	using namespace std;
+	int Rmul(int n, int m)
+	{
+		if(n == 1){
+			return m;
+		}
+		else{
+			if(n&1){
+				int t = m;
+				n = n>>1;
+				m = m<<1;
+				return Rmul(n,m)+t;
+			}
+			else{
+				n = n>>1;
+				m = m<<1;
+				return Rmul(n,m);			
+			}
+		}
+	}
+	int main()
+	{
+		cout << Rmul(50,24) << endl;
+		return 0;
+	}
+8.拿子游戏
+分析：根据题设条件：
+	当n∈[1,4]，先手必胜；
+	当n==5时，先手取1~4根火柴时，必转化为n∈[1,4]，先手负；
+	当n∈[6,9], 先手分别取1~4根火柴，转化为n==5，先手胜；
+	当n==10时，先手取1~4根火柴时，必转化为n∈[6,9]，先手负；
+	......
+	由此可知，制胜策略：当n%5！=0时，先手每次通过取火柴1~4根使剩余火柴为5的倍数个，可以制胜。
+9.竞赛树
+（1）比赛总场数即是内部节点的个数：n-1
+（2）数根节点的两个孩子中，与根节点不同的那个孩子即为亚军
+10.检测假币
+1）将120枚硬币分成3堆各40枚，分别记为 A、B、C，任取两堆（假定为A、B）放到天平，最坏情况为天平不平，记偏向为p1，此时C堆为真币
+2）从A中取出27个放到天平外，从B中取出27个放到A端，再从C堆取出27个真币放到B端，此时天平情况：A(13)+B(27)----B(13)+C(27),记偏向p2
+	2.1)天平平衡。则假币在从A取出的27个中，即为在A中，由1）偏向p1可以得出假币较真币的轻重。再通过三次三分，每一次三分只需一次
+	比较就可得出假币的位置。共需5次比较。
+	2.2）p1！=p2，即天平偏向与1)同，则假币必在B(27)中，因为只有这部分交换了位置，即在B中，由1)偏向p1可以得出假币较真币的轻重。
+	再从B(27)中经过三次三分得出假币，共需5次比较。
+	2.3）p1==p2，即天平偏向与1）相同，则假币在A(13)或B(13)，把B(27)与C(27)取出放到天平外C堆，从A(13)中取出9个放到天平外，
+	从B(13)中取出9个放到A端，再从C堆真币中取出9个放到B端，此时天平情况：A(4)+B(9)----B(4)+C(9),记偏向p3
+		2.3.1）天平平衡。则假币在从A取出的9个中，即为在A中，由1)偏向p1可以得出假币较真币的轻重。再通过两次三分比较，共需5次比较
+		2.3.2）p1！=p3，即天平偏向与1)2)不同，则假币必在B(9)中，因为只有这部分交换了位置，即在B中，由1)偏向p1可以得出假币较真币
+		的轻重。再从B(9)中经过两次三分得出假币，共需5次比较。
+		2.3.3)p1==p3,即天平偏向与1)2)相同，则假币在A(4)或B(4)，把B(9)与C(9)取出放到天平外C堆，从A(4)中取出3个放到天平外，
+		从B(4)中取出3个放到A端，再从C堆真币中取出3个放到B端，此时天平情况：A(1)+B(3)----B(1)+C(3),记偏向p4
+			2.3.3.1）天平平衡。则假币在从A取出的3个中，即为在A中，由1)偏向p1可以得出假币较真币的轻重。再通过一次三分比较，
+			共需5次比较
+			2.3.3.2）p1！=p4，即天平偏向与1)2)3)不同，则假币必在B(3)中，因为只有这部分交换了位置，即在B中，
+			由1)偏向p1可以得出假币较真币的轻重。再从B(3)中经过一次三分得出假币，共需5次比较。
+			2.3.3.3）p1==p4，即天平偏向与1)2)3)相同，则假币在A(1)或B(1)，把B(3)与C(3)取出放到天平外C堆，
+			此时天平情况：A(1)----B(1),通过一次比较得出假币，共需5次比较。
